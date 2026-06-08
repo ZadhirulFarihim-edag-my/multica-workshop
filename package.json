@@ -1,0 +1,8 @@
+{
+  "name": "multica-workshop",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node ./scripts/run-tests.mjs"
+  }
+}

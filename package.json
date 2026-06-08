@@ -3,7 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "vitest run"
+    "test": "node ./scripts/run-tests.mjs && vitest run",
+    "db:seed": "node scripts/seed-demo-data.mjs",
+    "test:validation": "vitest run"
   },
   "dependencies": {
     "zod": "^3.24.1"

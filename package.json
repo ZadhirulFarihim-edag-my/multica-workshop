@@ -3,7 +3,16 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node ./scripts/run-tests.mjs",
-    "db:seed": "node scripts/seed-demo-data.mjs"
+    "test": "node ./scripts/run-tests.mjs && vitest run",
+    "db:seed": "node scripts/seed-demo-data.mjs",
+    "test:validation": "vitest run"
+  },
+  "dependencies": {
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
   }
 }

@@ -1,6 +1,6 @@
-import { Prisma } from "../../generated/prisma/client.js";
-import { prisma } from "../../lib/db/prisma.js";
-import { teamMemberSummarySelect } from "./selects.js";
+import { Prisma } from "../../generated/prisma/client";
+import { prisma } from "../../lib/db/prisma";
+import { teamMemberSummarySelect } from "./selects";
 
 const teamMemberWithCountsSelect = {
   ...teamMemberSummarySelect,

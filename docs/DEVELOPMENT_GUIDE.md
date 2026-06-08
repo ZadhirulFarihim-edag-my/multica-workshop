@@ -143,6 +143,8 @@ test: cover project validation
 
 Do not commit generated files, local IDE settings, dependency caches, or unrelated changes.
 
+After committing repository work, push the branch so reviewers and other agents can access the change. If the push cannot be completed because of authentication, permissions, remote conflicts, or validation failures, report that explicitly in the issue or pull request notes.
+
 ## Pull Request Guidelines
 
 Each PR should include:
@@ -154,4 +156,3 @@ Each PR should include:
 - Any known risks or follow-up work.
 
 Keep PRs focused. If a change touches multiple unrelated areas, split it into separate issues or PRs.
-

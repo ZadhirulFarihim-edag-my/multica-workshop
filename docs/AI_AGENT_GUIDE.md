@@ -64,6 +64,8 @@ fix: return 404 for missing task
 
 Do not include secrets, tokens, local environment files, or unrelated workspace files.
 
+After a successful commit for repository work, push the current branch before posting the final issue result comment unless the user explicitly requested local-only work or the push is blocked by authentication, permissions, remote conflicts, or failing required validation. If pushing is blocked, state the blocker in the issue comment.
+
 ## Pull Request Rules
 
 When opening a PR, include:
@@ -131,4 +133,3 @@ Recommended flow:
 5. Review and merge one PR at a time when changes touch shared contracts.
 
 Use issue metadata only for durable facts that future agents will repeatedly need, such as PR URLs, deploy URLs, external ticket links, or persistent blockers.
-

@@ -1,12 +1,17 @@
-import { teamMemberUpdateSchema } from "../../../../lib/validations/team-member.schema";
-import { entityIdSchema } from "../../../../lib/validations/shared";
-import { parseJsonBody, errorResponse, successResponse, validationErrorResponse } from "../../../../server/utils/http";
+import { parseRequest } from "../../../../lib/validation/parse-request.js";
+import { entityIdSchema } from "../../../../lib/validations/shared.js";
+import { teamMemberUpdateSchema } from "../../../../lib/validations/team-member.schema.js";
+import {
+  errorResponse,
+  parseJsonBody,
+  successResponse,
+  validationErrorResponse,
+} from "../../../../server/utils/http.js";
 import {
   deleteTeamMemberRecord,
   getTeamMemberDetail,
   updateTeamMemberRecord,
-} from "../../../../server/services/team-member.service";
-import { parseRequest } from "../../../../lib/validation/parse-request";
+} from "../../../../server/services/team-member.service.js";
 
 type RouteContext = {
   params: {
@@ -33,7 +38,7 @@ export async function GET(_request: Request, context: RouteContext) {
   }
 }
 
-export async function PATCH(request: Request, context: RouteContext) {
+export async function PUT(request: Request, context: RouteContext) {
   const parsedId = validateId(context.params.id);
 
   if (!parsedId.success) {
@@ -54,6 +59,8 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 }
 
+export const PATCH = PUT;
+
 export async function DELETE(_request: Request, context: RouteContext) {
   const parsedId = validateId(context.params.id);
 
@@ -63,7 +70,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
 
   try {
     const item = await deleteTeamMemberRecord(parsedId.data);
-    return successResponse({ item }, "Team member deleted successfully");
+    return successResponse({ item }, "Team member deactivated successfully");
   } catch (error) {
     return errorResponse(error);
   }

@@ -6,7 +6,12 @@ import {
   updateObjectSchema,
 } from "./shared.js";
 
-export const teamMemberRoleSchema = z.enum(["owner", "admin", "member", "viewer"]);
+export const teamMemberRoleSchema = z.enum([
+  "owner",
+  "admin",
+  "member",
+  "viewer",
+]);
 
 export const teamMemberStatusSchema = z.enum(["active", "inactive", "invited"]);
 
@@ -38,7 +43,8 @@ export const teamMemberUpdateSchema = updateObjectSchema(
     avatarUrl: teamMemberFields.avatarUrl,
     notes: teamMemberFields.notes,
   },
-  "At least one team member field must be provided"
+  "At least one team member field must be provided",
 );
 
+export type TeamMemberCreateInput = z.infer<typeof teamMemberCreateSchema>;
 export type TeamMemberUpdateInput = z.infer<typeof teamMemberUpdateSchema>;

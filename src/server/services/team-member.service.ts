@@ -1,6 +1,6 @@
-import { createEntityId } from "../utils/ids";
-import { createPageInfo, getPaginationWindow } from "../utils/pagination";
-import { createConflictError, createNotFoundError } from "./errors";
+import { createEntityId } from "../utils/ids.js";
+import { createPageInfo, getPaginationWindow } from "../utils/pagination.js";
+import { createConflictError, createNotFoundError } from "./errors.js";
 import {
   countTeamMembers,
   createTeamMember,
@@ -9,7 +9,21 @@ import {
   getTeamMemberById,
   listTeamMembers,
   updateTeamMember,
-} from "../repositories/team-member.repository";
+  type TeamMemberRecord,
+} from "../repositories/team-member.repository.js";
+
+export type TeamMemberSummary = Omit<TeamMemberRecord, "_count"> & {
+  assignedTaskCount: number;
+};
+
+function toTeamMemberSummary(record: TeamMemberRecord): TeamMemberSummary {
+  const { _count, ...rest } = record;
+
+  return {
+    ...rest,
+    assignedTaskCount: _count.assignedTasks,
+  };
+}
 
 export async function listTeamMemberSummaries(query: {
   page: number;
@@ -44,7 +58,7 @@ export async function listTeamMemberSummaries(query: {
   ]);
 
   return {
-    items: items.slice(skip, skip + take),
+    items: items.slice(skip, skip + take).map(toTeamMemberSummary),
     pageInfo: createPageInfo(totalItems, query.page, query.pageSize),
   };
 }
@@ -56,7 +70,7 @@ export async function getTeamMemberDetail(id: string) {
     throw createNotFoundError("Team member not found");
   }
 
-  return member;
+  return toTeamMemberSummary(member);
 }
 
 export async function createTeamMemberRecord(input: {
@@ -74,7 +88,7 @@ export async function createTeamMemberRecord(input: {
     throw createConflictError("Team member email already exists");
   }
 
-  return createTeamMember({
+  const item = await createTeamMember({
     id: input.id ?? createEntityId("member"),
     name: input.name,
     email: input.email,
@@ -83,6 +97,8 @@ export async function createTeamMemberRecord(input: {
     avatarUrl: input.avatarUrl,
     notes: input.notes,
   });
+
+  return toTeamMemberSummary(item);
 }
 
 export async function updateTeamMemberRecord(
@@ -94,7 +110,7 @@ export async function updateTeamMemberRecord(
     status?: "active" | "inactive" | "invited";
     avatarUrl?: string;
     notes?: string;
-  }
+  },
 ) {
   const existing = await getTeamMemberById(id);
 
@@ -110,7 +126,8 @@ export async function updateTeamMemberRecord(
     }
   }
 
-  return updateTeamMember(id, input);
+  const item = await updateTeamMember(id, input);
+  return toTeamMemberSummary(item);
 }
 
 export async function deleteTeamMemberRecord(id: string) {
@@ -120,5 +137,6 @@ export async function deleteTeamMemberRecord(id: string) {
     throw createNotFoundError("Team member not found");
   }
 
-  return deleteTeamMember(id);
+  const item = await deleteTeamMember(id);
+  return toTeamMemberSummary(item);
 }

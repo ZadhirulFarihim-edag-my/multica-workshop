@@ -1,13 +1,13 @@
 import { z } from "zod";
 import {
-  isoDateTimeSchema,
+  entityIdSchema,
+  isoDateTimeOrDateSchema,
   optionalTrimmedString,
   trimmedString,
   updateObjectSchema,
-  uuidSchema,
-} from "./shared";
+} from "./shared.js";
 
-export const taskStatusSchema = z.enum(["todo", "in_progress", "blocked", "done"]);
+export const taskStatusSchema = z.enum(["todo", "in_progress", "review", "blocked", "done"]);
 
 export const taskPrioritySchema = z.enum(["low", "medium", "high", "urgent"]);
 
@@ -16,9 +16,9 @@ const taskFields = {
   description: optionalTrimmedString(),
   status: taskStatusSchema,
   priority: taskPrioritySchema,
-  projectId: uuidSchema.optional(),
-  assigneeId: uuidSchema.optional(),
-  dueDate: isoDateTimeSchema.optional(),
+  projectId: entityIdSchema,
+  assigneeId: entityIdSchema.optional(),
+  dueDate: isoDateTimeOrDateSchema.optional(),
 };
 
 export const taskCreateSchema = z.object({

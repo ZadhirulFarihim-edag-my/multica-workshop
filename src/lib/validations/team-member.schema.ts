@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { optionalTrimmedString, trimmedString, updateObjectSchema } from "./shared";
+import {
+  entityIdSchema,
+  optionalTrimmedString,
+  trimmedString,
+  updateObjectSchema,
+} from "./shared.js";
 
 export const teamMemberRoleSchema = z.enum(["owner", "admin", "member", "viewer"]);
 
@@ -13,6 +18,16 @@ const teamMemberFields = {
   avatarUrl: z.string().url("Team member avatar URL must be valid").optional(),
   notes: optionalTrimmedString(),
 };
+
+export const teamMemberCreateSchema = z.object({
+  id: entityIdSchema.optional(),
+  name: teamMemberFields.name,
+  email: teamMemberFields.email,
+  role: teamMemberFields.role,
+  status: teamMemberFields.status.default("active"),
+  avatarUrl: teamMemberFields.avatarUrl,
+  notes: teamMemberFields.notes,
+});
 
 export const teamMemberUpdateSchema = updateObjectSchema(
   {

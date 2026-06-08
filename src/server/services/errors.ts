@@ -1,4 +1,4 @@
-import { ApiError } from "../../lib/utils/api-error.js";
+import { ApiError } from "../../lib/utils/api-error";
 
 export function createNotFoundError(message: string) {
   return new ApiError({

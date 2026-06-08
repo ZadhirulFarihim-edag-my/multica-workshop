@@ -5,7 +5,7 @@ import {
   optionalTrimmedString,
   trimmedString,
   updateObjectSchema,
-} from "./shared.js";
+} from "./shared";
 
 export const taskStatusSchema = z.enum(["todo", "in_progress", "review", "blocked", "done"]);
 

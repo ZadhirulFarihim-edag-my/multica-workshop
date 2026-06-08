@@ -114,6 +114,27 @@ export async function getDashboardSnapshot() {
         dueDate: true,
         createdAt: true,
         updatedAt: true,
+        project: {
+          select: {
+            id: true,
+            name: true,
+            status: true,
+            color: true,
+          },
+        },
+        assignee: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            status: true,
+            avatarUrl: true,
+            notes: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
       },
     }),
     prisma.task.count({

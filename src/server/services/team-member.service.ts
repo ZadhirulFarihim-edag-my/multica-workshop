@@ -1,6 +1,6 @@
-import { createEntityId } from "../utils/ids.js";
-import { createPageInfo, getPaginationWindow } from "../utils/pagination.js";
-import { createConflictError, createNotFoundError } from "./errors.js";
+import { createEntityId } from "../utils/ids";
+import { createPageInfo, getPaginationWindow } from "../utils/pagination";
+import { createConflictError, createNotFoundError } from "./errors";
 import {
   countTeamMembers,
   createTeamMember,
@@ -10,7 +10,7 @@ import {
   listTeamMembers,
   updateTeamMember,
   type TeamMemberRecord,
-} from "../repositories/team-member.repository.js";
+} from "../repositories/team-member.repository";
 
 export type TeamMemberSummary = Omit<TeamMemberRecord, "_count"> & {
   assignedTaskCount: number;

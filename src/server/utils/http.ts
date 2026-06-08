@@ -1,9 +1,9 @@
 import {
   createSuccessResponse,
   createValidationErrorResponse,
-} from "../../lib/utils/api-response.js";
-import { parseRequest } from "../../lib/validation/parse-request.js";
-import { toApiErrorResponse } from "../../lib/utils/api-error.js";
+} from "../../lib/utils/api-response";
+import { parseRequest } from "../../lib/validation/parse-request";
+import { toApiErrorResponse } from "../../lib/utils/api-error";
 
 export type JsonSuccessBody<T> = ReturnType<typeof createSuccessResponse<T>>;
 

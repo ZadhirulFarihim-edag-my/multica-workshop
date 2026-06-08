@@ -4,7 +4,7 @@ import {
   optionalTrimmedString,
   trimmedString,
   updateObjectSchema,
-} from "./shared.js";
+} from "./shared";
 
 export const teamMemberRoleSchema = z.enum([
   "owner",

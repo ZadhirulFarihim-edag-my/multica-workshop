@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { entityIdSchema, trimmedString, updateObjectSchema } from "./shared.js";
+import { entityIdSchema, trimmedString, updateObjectSchema } from "./shared";
 
 export const commentCreateSchema = z.object({
   content: trimmedString("Comment content is required"),

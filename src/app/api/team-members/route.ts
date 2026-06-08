@@ -1,16 +1,16 @@
-import { teamMemberCreateSchema } from "../../../lib/validations/team-member.schema.js";
-import { teamMemberListQuerySchema } from "../../../lib/validations/query.schema.js";
+import { teamMemberCreateSchema } from "../../../lib/validations/team-member.schema";
+import { teamMemberListQuerySchema } from "../../../lib/validations/query.schema";
 import {
   errorResponse,
   parseJsonBody,
   parseQueryParams,
   successResponse,
   validationErrorResponse,
-} from "../../../server/utils/http.js";
+} from "../../../server/utils/http";
 import {
   createTeamMemberRecord,
   listTeamMemberSummaries,
-} from "../../../server/services/team-member.service.js";
+} from "../../../server/services/team-member.service";
 
 export async function GET(request: Request) {
   const parsed = parseQueryParams(teamMemberListQuerySchema, request);

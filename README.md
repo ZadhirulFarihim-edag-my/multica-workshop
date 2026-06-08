@@ -37,6 +37,14 @@ Run tests:
 npm test
 ```
 
+Seed the demo workspace data:
+
+```bash
+npm run db:seed
+```
+
+This command clears any previous demo dataset under `data/` and regenerates a realistic workshop payload with projects, team members, tasks, activity logs, and comments. The output is written to `data/demo-database.json`.
+
 Run linting and formatting checks:
 
 ```bash

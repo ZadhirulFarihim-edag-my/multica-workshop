@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node ./scripts/run-tests.mjs"
+    "test": "node ./scripts/run-tests.mjs",
+    "db:seed": "node scripts/seed-demo-data.mjs"
   }
 }

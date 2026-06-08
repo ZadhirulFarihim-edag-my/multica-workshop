@@ -9,9 +9,9 @@ import { parseRequest } from "../../../../lib/validation/parse-request";
 import { entityIdSchema } from "../../../../lib/validations/shared";
 
 type RouteContext = {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 };
 
 function validateId(id: string) {
@@ -19,7 +19,8 @@ function validateId(id: string) {
 }
 
 export async function GET(_request: Request, context: RouteContext) {
-  const parsedId = validateId(context.params.id);
+  const { id } = await context.params;
+  const parsedId = validateId(id);
 
   if (!parsedId.success) {
     return validationErrorResponse(parsedId.error.details);
@@ -34,7 +35,8 @@ export async function GET(_request: Request, context: RouteContext) {
 }
 
 export async function PATCH(request: Request, context: RouteContext) {
-  const parsedId = validateId(context.params.id);
+  const { id } = await context.params;
+  const parsedId = validateId(id);
 
   if (!parsedId.success) {
     return validationErrorResponse(parsedId.error.details);
@@ -55,7 +57,8 @@ export async function PATCH(request: Request, context: RouteContext) {
 }
 
 export async function DELETE(_request: Request, context: RouteContext) {
-  const parsedId = validateId(context.params.id);
+  const { id } = await context.params;
+  const parsedId = validateId(id);
 
   if (!parsedId.success) {
     return validationErrorResponse(parsedId.error.details);

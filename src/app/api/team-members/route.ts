@@ -1,72 +1,39 @@
+import { teamMemberCreateSchema } from "../../../lib/validations/team-member.schema.js";
+import { teamMemberListQuerySchema } from "../../../lib/validations/query.schema.js";
 import {
-  createSuccessResponse,
-  createValidationErrorResponse,
-} from "../../../lib/utils/api-response.js";
-import { toApiErrorResponse } from "../../../lib/utils/api-error.js";
-import { parseRequest } from "../../../lib/validation/parse-request";
-import { teamMemberCreateSchema } from "../../../lib/validations/team-member.schema";
-import { createTeamMemberService } from "../../../server/services/team-member.service";
+  errorResponse,
+  parseJsonBody,
+  parseQueryParams,
+  successResponse,
+  validationErrorResponse,
+} from "../../../server/utils/http.js";
+import {
+  createTeamMemberRecord,
+  listTeamMemberSummaries,
+} from "../../../server/services/team-member.service.js";
 
-const teamMemberService = createTeamMemberService();
+export async function GET(request: Request) {
+  const parsed = parseQueryParams(teamMemberListQuerySchema, request);
 
-function toJsonResponse(response: {
-  status: number;
-  body: unknown;
-}) {
-  return Response.json(response.body, {
-    status: response.status,
-  });
-}
-
-export async function GET() {
-  try {
-    const result = await teamMemberService.listTeamMembers();
-
-    return toJsonResponse(
-      createSuccessResponse({
-        teamMembers: result.items,
-        total: result.total,
-      }),
-    );
-  } catch (error) {
-    return toJsonResponse(toApiErrorResponse(error));
+  if (!parsed.success) {
+    return validationErrorResponse(parsed.error.details);
   }
+
+  const data = await listTeamMemberSummaries(parsed.data);
+  return successResponse(data, "Team members fetched successfully");
 }
 
 export async function POST(request: Request) {
-  let body: unknown;
+  const parsed = await parseJsonBody(teamMemberCreateSchema, request);
 
-  try {
-    body = await request.json();
-  } catch {
-    return toJsonResponse(
-      createValidationErrorResponse([
-        {
-          path: ["body"],
-          message: "Request body must be valid JSON",
-        },
-      ]),
-    );
-  }
-
-  const parsedBody = parseRequest(teamMemberCreateSchema, body);
-
-  if (!parsedBody.success) {
-    return toJsonResponse(createValidationErrorResponse(parsedBody.error.details));
+  if (!parsed.success) {
+    return validationErrorResponse(parsed.error.details);
   }
 
   try {
-    const teamMember = await teamMemberService.createTeamMember(parsedBody.data);
-
-    return toJsonResponse(
-      createSuccessResponse(
-        {
-          teamMember,
-        },
-        "Team member created successfully",
-      ),
-    );
+    const item = await createTeamMemberRecord(parsed.data);
+    return successResponse({ item }, "Team member created successfully");
   } catch (error) {
-    return toJsonResponse(toApiErrorResponse(error));
+    return errorResponse(error);
   }
 }

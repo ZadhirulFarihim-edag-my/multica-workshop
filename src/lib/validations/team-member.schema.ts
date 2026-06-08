@@ -1,9 +1,17 @@
 import { z } from "zod";
-import { optionalTrimmedString, trimmedString, updateObjectSchema } from "./shared";
+import {
+  entityIdSchema,
+  optionalTrimmedString,
+  trimmedString,
+  updateObjectSchema,
+} from "./shared.js";
 
-export const teamMemberIdSchema = trimmedString("Team member id is required");
-
-export const teamMemberRoleSchema = trimmedString("Team member role is required");
+export const teamMemberRoleSchema = z.enum([
+  "owner",
+  "admin",
+  "member",
+  "viewer",
+]);
 
 export const teamMemberStatusSchema = z.enum(["active", "inactive", "invited"]);
 
@@ -17,6 +25,7 @@ const teamMemberFields = {
 };
 
 export const teamMemberCreateSchema = z.object({
+  id: entityIdSchema.optional(),
   name: teamMemberFields.name,
   email: teamMemberFields.email,
   role: teamMemberFields.role,
@@ -34,7 +43,7 @@ export const teamMemberUpdateSchema = updateObjectSchema(
     avatarUrl: teamMemberFields.avatarUrl,
     notes: teamMemberFields.notes,
   },
-  "At least one team member field must be provided"
+  "At least one team member field must be provided",
 );
 
 export type TeamMemberCreateInput = z.infer<typeof teamMemberCreateSchema>;

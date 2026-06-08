@@ -1,167 +1,142 @@
-import { Prisma } from "../../generated/prisma/client.js";
-import { ApiError } from "../../lib/utils/api-error.js";
-import type {
-  TeamMemberCreateInput,
-  TeamMemberUpdateInput,
-} from "../../lib/validations/team-member.schema";
+import { createEntityId } from "../utils/ids.js";
+import { createPageInfo, getPaginationWindow } from "../utils/pagination.js";
+import { createConflictError, createNotFoundError } from "./errors.js";
 import {
-  createPrismaTeamMemberRepository,
+  countTeamMembers,
+  createTeamMember,
+  deleteTeamMember,
+  getTeamMemberByEmail,
+  getTeamMemberById,
+  listTeamMembers,
+  updateTeamMember,
   type TeamMemberRecord,
-  type TeamMemberRepository,
-} from "../repositories/team-member.repository";
+} from "../repositories/team-member.repository.js";
 
-export type TeamMemberDto = {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  status: "active" | "inactive" | "invited";
-  avatarUrl: string | null;
-  notes: string | null;
+export type TeamMemberSummary = Omit<TeamMemberRecord, "_count"> & {
   assignedTaskCount: number;
-  createdAt: string;
-  updatedAt: string;
 };
 
-export type TeamMemberListResult = {
-  items: TeamMemberDto[];
-  total: number;
-};
+function toTeamMemberSummary(record: TeamMemberRecord): TeamMemberSummary {
+  const { _count, ...rest } = record;
 
-function toTeamMemberDto(record: TeamMemberRecord): TeamMemberDto {
   return {
-    id: record.id,
-    name: record.name,
-    email: record.email,
-    role: record.role,
-    status: record.status,
-    avatarUrl: record.avatarUrl,
-    notes: record.notes,
-    assignedTaskCount: record._count.assignedTasks,
-    createdAt: record.createdAt.toISOString(),
-    updatedAt: record.updatedAt.toISOString(),
+    ...rest,
+    assignedTaskCount: _count.assignedTasks,
   };
 }
 
-function isKnownPrismaError(error: unknown): error is Prisma.PrismaClientKnownRequestError {
-  return error instanceof Prisma.PrismaClientKnownRequestError;
+export async function listTeamMemberSummaries(query: {
+  page: number;
+  pageSize: number;
+  search?: string;
+  status?: "active" | "inactive" | "invited";
+  role?: "owner" | "admin" | "member" | "viewer";
+}) {
+  const where = {
+    AND: [
+      ...(query.search
+        ? [
+            {
+              OR: [
+                { name: { contains: query.search } },
+                { email: { contains: query.search } },
+                { role: { contains: query.search } },
+                { notes: { contains: query.search } },
+              ],
+            },
+          ]
+        : []),
+      ...(query.status ? [{ status: query.status }] : []),
+      ...(query.role ? [{ role: query.role }] : []),
+    ],
+  } as Parameters<typeof listTeamMembers>[0];
+
+  const { skip, take } = getPaginationWindow(query.page, query.pageSize);
+  const [items, totalItems] = await Promise.all([
+    listTeamMembers(where),
+    countTeamMembers(where),
+  ]);
+
+  return {
+    items: items.slice(skip, skip + take).map(toTeamMemberSummary),
+    pageInfo: createPageInfo(totalItems, query.page, query.pageSize),
+  };
 }
 
-function throwNotFoundError(): never {
-  throw new ApiError({
-    status: 404,
-    code: "NOT_FOUND",
-    message: "Team member not found",
+export async function getTeamMemberDetail(id: string) {
+  const member = await getTeamMemberById(id);
+
+  if (!member) {
+    throw createNotFoundError("Team member not found");
+  }
+
+  return toTeamMemberSummary(member);
+}
+
+export async function createTeamMemberRecord(input: {
+  id?: string;
+  name: string;
+  email: string;
+  role: "owner" | "admin" | "member" | "viewer";
+  status: "active" | "inactive" | "invited";
+  avatarUrl?: string;
+  notes?: string;
+}) {
+  const existingEmail = await getTeamMemberByEmail(input.email);
+
+  if (existingEmail) {
+    throw createConflictError("Team member email already exists");
+  }
+
+  const item = await createTeamMember({
+    id: input.id ?? createEntityId("member"),
+    name: input.name,
+    email: input.email,
+    role: input.role,
+    status: input.status,
+    avatarUrl: input.avatarUrl,
+    notes: input.notes,
   });
+
+  return toTeamMemberSummary(item);
 }
 
-function throwConflictError(): never {
-  throw new ApiError({
-    status: 409,
-    code: "CONFLICT",
-    message: "Team member email already exists",
-  });
-}
+export async function updateTeamMemberRecord(
+  id: string,
+  input: {
+    name?: string;
+    email?: string;
+    role?: "owner" | "admin" | "member" | "viewer";
+    status?: "active" | "inactive" | "invited";
+    avatarUrl?: string;
+    notes?: string;
+  },
+) {
+  const existing = await getTeamMemberById(id);
 
-function mapPrismaError(error: unknown): never {
-  if (isKnownPrismaError(error)) {
-    if (error.code === "P2002") {
-      throwConflictError();
-    }
+  if (!existing) {
+    throw createNotFoundError("Team member not found");
+  }
 
-    if (error.code === "P2025") {
-      throwNotFoundError();
+  if (input.email && input.email !== existing.email) {
+    const duplicate = await getTeamMemberByEmail(input.email);
+
+    if (duplicate) {
+      throw createConflictError("Team member email already exists");
     }
   }
 
-  throw error;
+  const item = await updateTeamMember(id, input);
+  return toTeamMemberSummary(item);
 }
 
-export function createTeamMemberService(
-  repository: TeamMemberRepository = createPrismaTeamMemberRepository(),
-) {
-  return {
-    async listTeamMembers(): Promise<TeamMemberListResult> {
-      const items = await repository.listTeamMembers();
+export async function deleteTeamMemberRecord(id: string) {
+  const existing = await getTeamMemberById(id);
 
-      return {
-        items: items.map(toTeamMemberDto),
-        total: items.length,
-      };
-    },
+  if (!existing) {
+    throw createNotFoundError("Team member not found");
+  }
 
-    async getTeamMember(id: string): Promise<TeamMemberDto> {
-      const teamMember = await repository.findTeamMemberById(id);
-
-      if (!teamMember) {
-        throwNotFoundError();
-      }
-
-      return toTeamMemberDto(teamMember);
-    },
-
-    async createTeamMember(input: TeamMemberCreateInput): Promise<TeamMemberDto> {
-      const existing = await repository.findTeamMemberByEmail(input.email);
-
-      if (existing) {
-        throwConflictError();
-      }
-
-      try {
-        const teamMember = await repository.createTeamMember(input);
-        return toTeamMemberDto(teamMember);
-      } catch (error) {
-        return mapPrismaError(error);
-      }
-    },
-
-    async updateTeamMember(
-      id: string,
-      input: TeamMemberUpdateInput,
-    ): Promise<TeamMemberDto> {
-      const existing = await repository.findTeamMemberById(id);
-
-      if (!existing) {
-        throwNotFoundError();
-      }
-
-      if (input.email && input.email !== existing.email) {
-        const conflictingMember = await repository.findTeamMemberByEmail(
-          input.email,
-        );
-
-        if (conflictingMember && conflictingMember.id !== id) {
-          throwConflictError();
-        }
-      }
-
-      try {
-        const teamMember = await repository.updateTeamMember(id, input);
-        return toTeamMemberDto(teamMember);
-      } catch (error) {
-        return mapPrismaError(error);
-      }
-    },
-
-    async deactivateTeamMember(id: string): Promise<TeamMemberDto> {
-      const existing = await repository.findTeamMemberById(id);
-
-      if (!existing) {
-        throwNotFoundError();
-      }
-
-      if (existing.status === "inactive") {
-        return toTeamMemberDto(existing);
-      }
-
-      try {
-        const teamMember = await repository.updateTeamMember(id, {
-          status: "inactive",
-        });
-        return toTeamMemberDto(teamMember);
-      } catch (error) {
-        return mapPrismaError(error);
-      }
-    },
-  };
+  const item = await deleteTeamMember(id);
+  return toTeamMemberSummary(item);
 }

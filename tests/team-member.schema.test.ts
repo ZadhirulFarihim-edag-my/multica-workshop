@@ -3,18 +3,24 @@ import {
   teamMemberCreateSchema,
   teamMemberRoleSchema,
   teamMemberUpdateSchema,
-} from "../src/lib/validations/team-member.schema";
+} from "../src/lib/validations/team-member.schema.js";
 
 describe("team member validation schema", () => {
-  it("accepts free-form role names", () => {
-    expect(teamMemberRoleSchema.parse("Backend Engineer")).toBe("Backend Engineer");
+  it("accepts a team member create payload", () => {
+    const result = teamMemberCreateSchema.safeParse({
+      name: "Demo Member",
+      email: "demo@example.com",
+      role: teamMemberRoleSchema.Enum.member,
+    });
+
+    expect(result.success).toBe(true);
   });
 
   it("defaults new members to active status", () => {
     const result = teamMemberCreateSchema.parse({
-      name: "Alex Morgan",
-      email: "alex@example.com",
-      role: "Backend Engineer",
+      name: "Demo Member",
+      email: "demo@example.com",
+      role: teamMemberRoleSchema.Enum.member,
     });
 
     expect(result.status).toBe("active");

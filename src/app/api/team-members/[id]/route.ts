@@ -1,143 +1,77 @@
+import { parseRequest } from "../../../../lib/validation/parse-request.js";
+import { entityIdSchema } from "../../../../lib/validations/shared.js";
+import { teamMemberUpdateSchema } from "../../../../lib/validations/team-member.schema.js";
 import {
-  createSuccessResponse,
-  createValidationErrorResponse,
-} from "../../../../lib/utils/api-response.js";
-import { parseRequest } from "../../../../lib/validation/parse-request";
+  errorResponse,
+  parseJsonBody,
+  successResponse,
+  validationErrorResponse,
+} from "../../../../server/utils/http.js";
 import {
-  teamMemberIdSchema,
-  teamMemberUpdateSchema,
-} from "../../../../lib/validations/team-member.schema";
-import { toApiErrorResponse } from "../../../../lib/utils/api-error.js";
-import { createTeamMemberService } from "../../../../server/services/team-member.service";
+  deleteTeamMemberRecord,
+  getTeamMemberDetail,
+  updateTeamMemberRecord,
+} from "../../../../server/services/team-member.service.js";
 
-const teamMemberService = createTeamMemberService();
+type RouteContext = {
+  params: {
+    id: string;
+  };
+};
 
-function toJsonResponse(response: {
-  status: number;
-  body: unknown;
-}) {
-  return Response.json(response.body, {
-    status: response.status,
-  });
+function validateId(id: string) {
+  return parseRequest(entityIdSchema, id);
 }
 
-function parseTeamMemberId(id: string) {
-  const parsed = parseRequest(teamMemberIdSchema, id);
+export async function GET(_request: Request, context: RouteContext) {
+  const parsedId = validateId(context.params.id);
+
+  if (!parsedId.success) {
+    return validationErrorResponse(parsedId.error.details);
+  }
+
+  try {
+    const item = await getTeamMemberDetail(parsedId.data);
+    return successResponse({ item }, "Team member fetched successfully");
+  } catch (error) {
+    return errorResponse(error);
+  }
+}
+
+export async function PUT(request: Request, context: RouteContext) {
+  const parsedId = validateId(context.params.id);
+
+  if (!parsedId.success) {
+    return validationErrorResponse(parsedId.error.details);
+  }
+
+  const parsed = await parseJsonBody(teamMemberUpdateSchema, request);
 
   if (!parsed.success) {
-    return null;
-  }
-
-  return parsed.data;
-}
-
-export async function GET(_: Request, context: { params: { id: string } }) {
-  const id = parseTeamMemberId(context.params.id);
-
-  if (!id) {
-    return toJsonResponse(
-      createValidationErrorResponse([
-        {
-          path: ["id"],
-          message: "Team member id is required",
-        },
-      ]),
-    );
+    return validationErrorResponse(parsed.error.details);
   }
 
   try {
-    const teamMember = await teamMemberService.getTeamMember(id);
-
-    return toJsonResponse(
-      createSuccessResponse({
-        teamMember,
-      }),
-    );
+    const item = await updateTeamMemberRecord(parsedId.data, parsed.data);
+    return successResponse({ item }, "Team member updated successfully");
   } catch (error) {
-    return toJsonResponse(toApiErrorResponse(error));
+    return errorResponse(error);
   }
 }
 
-export async function PUT(request: Request, context: { params: { id: string } }) {
-  const id = parseTeamMemberId(context.params.id);
+export const PATCH = PUT;
 
-  if (!id) {
-    return toJsonResponse(
-      createValidationErrorResponse([
-        {
-          path: ["id"],
-          message: "Team member id is required",
-        },
-      ]),
-    );
-  }
+export async function DELETE(_request: Request, context: RouteContext) {
+  const parsedId = validateId(context.params.id);
 
-  let body: unknown;
-
-  try {
-    body = await request.json();
-  } catch {
-    return toJsonResponse(
-      createValidationErrorResponse([
-        {
-          path: ["body"],
-          message: "Request body must be valid JSON",
-        },
-      ]),
-    );
-  }
-
-  const parsedBody = parseRequest(teamMemberUpdateSchema, body);
-
-  if (!parsedBody.success) {
-    return toJsonResponse(createValidationErrorResponse(parsedBody.error.details));
+  if (!parsedId.success) {
+    return validationErrorResponse(parsedId.error.details);
   }
 
   try {
-    const teamMember = await teamMemberService.updateTeamMember(
-      id,
-      parsedBody.data,
-    );
-
-    return toJsonResponse(
-      createSuccessResponse(
-        {
-          teamMember,
-        },
-        "Team member updated successfully",
-      ),
-    );
+    const item = await deleteTeamMemberRecord(parsedId.data);
+    return successResponse({ item }, "Team member deactivated successfully");
   } catch (error) {
-    return toJsonResponse(toApiErrorResponse(error));
-  }
-}
-
-export async function DELETE(_: Request, context: { params: { id: string } }) {
-  const id = parseTeamMemberId(context.params.id);
-
-  if (!id) {
-    return toJsonResponse(
-      createValidationErrorResponse([
-        {
-          path: ["id"],
-          message: "Team member id is required",
-        },
-      ]),
-    );
-  }
-
-  try {
-    const teamMember = await teamMemberService.deactivateTeamMember(id);
-
-    return toJsonResponse(
-      createSuccessResponse(
-        {
-          teamMember,
-        },
-        "Team member deactivated successfully",
-      ),
-    );
-  } catch (error) {
-    return toJsonResponse(toApiErrorResponse(error));
+    return errorResponse(error);
   }
 }

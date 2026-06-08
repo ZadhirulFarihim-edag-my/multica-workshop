@@ -5,7 +5,16 @@ export const trimmedString = (message = "This field is required") =>
 
 export const optionalTrimmedString = () => z.string().trim().min(1).optional();
 
-export const uuidSchema = z.string().uuid();
+export const entityIdSchema = z.string().trim().min(1, {
+  message: "Identifier is required",
+});
+
+export const isoDateTimeOrDateSchema = z
+  .string()
+  .trim()
+  .refine((value) => !Number.isNaN(Date.parse(value)), {
+    message: "Date must be a valid ISO date or datetime",
+  });
 
 export const isoDateTimeSchema = z.string().datetime({ offset: true });
 

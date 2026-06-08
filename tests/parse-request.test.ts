@@ -13,4 +13,15 @@ describe("parseRequest", () => {
       expect(result.error.details.length).toBeGreaterThan(0);
     }
   });
+
+  it("accepts the revised task contract", () => {
+    const result = parseRequest(taskCreateSchema, {
+      title: "Ship the API",
+      projectId: "proj-demo",
+      status: "review",
+      dueDate: "2026-06-30",
+    });
+
+    expect(result.success).toBe(true);
+  });
 });

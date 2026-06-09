@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { PrimaryNav } from "./primary-nav";
 import { StatusPill } from "../ui/status-pill";
+import { LoginEntry } from "../auth/login-entry";
 
 type AppShellProps = {
   children: ReactNode;
@@ -44,6 +45,7 @@ export function AppShell({ children }: AppShellProps) {
           <div className="shell-status">
             <StatusPill tone="info">Live workspace</StatusPill>
             <span className="shell-status-note">Next.js App Router</span>
+            <LoginEntry />
           </div>
         </header>
 

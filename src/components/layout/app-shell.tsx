@@ -1,13 +1,19 @@
+"use client";
+
 import type { ReactNode } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { PrimaryNav } from "./primary-nav";
 import { StatusPill } from "../ui/status-pill";
+import { LoginModal } from "../ui/login-modal";
 
 type AppShellProps = {
   children: ReactNode;
 };
 
 export function AppShell({ children }: AppShellProps) {
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -30,6 +36,13 @@ export function AppShell({ children }: AppShellProps) {
             The app is wired to the existing Prisma-backed workspace data and API
             routes.
           </p>
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={() => setIsLoginOpen(true)}
+          >
+            Log in
+          </button>
         </div>
       </aside>
 
@@ -49,6 +62,7 @@ export function AppShell({ children }: AppShellProps) {
 
         <main className="shell-main">{children}</main>
       </div>
+      <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
     </div>
   );
 }

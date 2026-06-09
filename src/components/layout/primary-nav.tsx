@@ -8,6 +8,7 @@ const navItems = [
   { href: "/projects", label: "Projects", description: "Portfolio and ownership" },
   { href: "/tasks", label: "Tasks", description: "Delivery and priorities" },
   { href: "/team", label: "Team", description: "Members and capacity" },
+  { href: "/activity", label: "Activity", description: "Event history and audit trail" },
 ] as const;
 
 export function PrimaryNav() {

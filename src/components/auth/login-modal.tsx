@@ -41,7 +41,7 @@ export function LoginModal({
             onClick={onClose}
             type="button"
           >
-            ×
+            X
           </button>
         </div>
 

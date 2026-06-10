@@ -1,18 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { DeleteResourceButton } from "../../../components/ui/delete-resource-button";
 import { PageHeader } from "../../../components/ui/page-header";
 import { StatusPill } from "../../../components/ui/status-pill";
-import {
-  formatDate,
-  formatDateTime,
-  getStatusLabel,
-  getToneForStatus,
-} from "../../../lib/workspace";
-import {
-  getTaskDetail,
-  listActivityLogSummaries,
-  listCommentSummaries,
-} from "../../../lib/demo-workspace";
+import { formatDate, formatDateTime, getStatusLabel, getToneForStatus } from "../../../lib/workspace";
+import { listActivityLogSummaries } from "../../../server/services/activity-log.service";
+import { listCommentSummaries } from "../../../server/services/comment.service";
+import { getTaskDetail } from "../../../server/services/task.service";
 
 export const dynamic = "force-dynamic";
 
@@ -42,8 +36,14 @@ export default async function TaskDetailPage({ params }: PageProps) {
   }
 
   const task = result[0].value;
-  const commentsPage = result[1].status === "fulfilled" ? result[1].value : { items: [], pageInfo: { page: 1, pageSize: 100, totalItems: 0, totalPages: 0, hasNextPage: false, hasPreviousPage: false } };
-  const logsPage = result[2].status === "fulfilled" ? result[2].value : { items: [], pageInfo: { page: 1, pageSize: 8, totalItems: 0, totalPages: 0, hasNextPage: false, hasPreviousPage: false } };
+  const commentsPage =
+    result[1].status === "fulfilled"
+      ? result[1].value
+      : { items: [], pageInfo: { page: 1, pageSize: 100, totalItems: 0, totalPages: 0, hasNextPage: false, hasPreviousPage: false } };
+  const logsPage =
+    result[2].status === "fulfilled"
+      ? result[2].value
+      : { items: [], pageInfo: { page: 1, pageSize: 8, totalItems: 0, totalPages: 0, hasNextPage: false, hasPreviousPage: false } };
 
   return (
     <div className="page">
@@ -52,18 +52,27 @@ export default async function TaskDetailPage({ params }: PageProps) {
         title={task.title}
         description={task.description ?? "This task does not yet have a description."}
         actions={
-          <Link className="button button-secondary button-link" href="/tasks">
-            Back to tasks
-          </Link>
+          <>
+            <Link className="button button-secondary button-link" href="/tasks">
+              Back to tasks
+            </Link>
+            <Link className="button button-primary button-link" href={`/tasks/${task.id}/edit`}>
+              Edit task
+            </Link>
+            <DeleteResourceButton
+              confirmMessage={`Delete task "${task.title}"?`}
+              endpoint={`/api/tasks/${task.id}`}
+              label="Delete task"
+              redirectTo="/tasks"
+            />
+          </>
         }
       />
 
       <section className="detail-hero">
         <div className="detail-hero-top">
           <div>
-            <StatusPill tone={getToneForStatus(task.status)}>
-              {getStatusLabel(task.status)}
-            </StatusPill>
+            <StatusPill tone={getToneForStatus(task.status)}>{getStatusLabel(task.status)}</StatusPill>
             <h2 className="detail-title">{task.title}</h2>
             <p className="detail-subtitle">
               Belongs to <strong>{task.project.name}</strong>.{" "}
@@ -77,12 +86,8 @@ export default async function TaskDetailPage({ params }: PageProps) {
             </p>
           </div>
           <div className="detail-meta">
-            <StatusPill tone={getToneForStatus(task.priority)}>
-              {getStatusLabel(task.priority)}
-            </StatusPill>
-            <StatusPill tone="neutral">
-              Due {task.dueDate ? formatDate(task.dueDate) : "none"}
-            </StatusPill>
+            <StatusPill tone={getToneForStatus(task.priority)}>{getStatusLabel(task.priority)}</StatusPill>
+            <StatusPill tone="neutral">Due {task.dueDate ? formatDate(task.dueDate) : "none"}</StatusPill>
           </div>
         </div>
 
@@ -99,9 +104,7 @@ export default async function TaskDetailPage({ params }: PageProps) {
             <div className="section-card-header">
               <div>
                 <p className="section-title">Comment thread</p>
-                <p className="section-description">
-                  Current discussion attached to this task.
-                </p>
+                <p className="section-description">Current discussion attached to this task.</p>
               </div>
               <StatusPill tone="info">{commentsPage.items.length} comments</StatusPill>
             </div>
@@ -110,9 +113,7 @@ export default async function TaskDetailPage({ params }: PageProps) {
               {commentsPage.items.map((comment) => (
                 <li className="timeline-item" key={comment.id}>
                   <div className="timeline-top">
-                    <p className="timeline-strong">
-                      {comment.author ? comment.author.name : "System note"}
-                    </p>
+                    <p className="timeline-strong">{comment.author ? comment.author.name : "System note"}</p>
                     <StatusPill subtle tone="neutral">
                       {comment._count.replies} replies
                     </StatusPill>
@@ -128,9 +129,7 @@ export default async function TaskDetailPage({ params }: PageProps) {
             <div className="section-card-header">
               <div>
                 <p className="section-title">Recent activity</p>
-                <p className="section-description">
-                  System and user events connected to this task.
-                </p>
+                <p className="section-description">System and user events connected to this task.</p>
               </div>
               <StatusPill tone="info">{logsPage.items.length} items</StatusPill>
             </div>
@@ -146,7 +145,7 @@ export default async function TaskDetailPage({ params }: PageProps) {
                   </div>
                   <p className="timeline-body">
                     {entry.project.name}
-                    {entry.actor ? ` · ${entry.actor.name}` : ""}
+                    {entry.actor ? ` | ${entry.actor.name}` : ""}
                   </p>
                   <p className="timeline-body">{formatDateTime(entry.createdAt)}</p>
                 </li>
@@ -160,9 +159,7 @@ export default async function TaskDetailPage({ params }: PageProps) {
             <div className="section-card-header">
               <div>
                 <p className="section-title">Task metadata</p>
-                <p className="section-description">
-                  The fields that define how the task is tracked.
-                </p>
+                <p className="section-description">The fields that define how the task is tracked.</p>
               </div>
             </div>
 
@@ -190,15 +187,16 @@ export default async function TaskDetailPage({ params }: PageProps) {
             <div className="section-card-header">
               <div>
                 <p className="section-title">Workspace links</p>
-                <p className="section-description">
-                  Continue the review in related views.
-                </p>
+                <p className="section-description">Continue the review in related views.</p>
               </div>
             </div>
 
             <div className="compact-list">
               <Link className="button button-primary button-link" href={`/projects/${task.projectId}`}>
                 Open project
+              </Link>
+              <Link className="button button-secondary button-link" href={`/tasks/${task.id}/edit`}>
+                Edit task
               </Link>
               <Link className="button button-secondary button-link" href="/team">
                 Review team

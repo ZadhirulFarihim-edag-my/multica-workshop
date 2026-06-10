@@ -1,18 +1,9 @@
 import Link from "next/link";
 import { PageHeader } from "../../components/ui/page-header";
 import { StatusPill } from "../../components/ui/status-pill";
-import {
-  formatDate,
-  getStatusLabel,
-  getToneForStatus,
-} from "../../lib/workspace";
-import {
-  getQueryValue,
-  mergeSearchParams,
-  parsePage,
-  parseString,
-} from "../../lib/query-params";
-import { listProjectSummaries, listTaskSummaries } from "../../lib/demo-workspace";
+import { getQueryValue, mergeSearchParams, parsePage, parseString } from "../../lib/query-params";
+import { formatDate, getStatusLabel, getToneForStatus } from "../../lib/workspace";
+import { listProjectSummaries } from "../../server/services/project.service";
 
 export const dynamic = "force-dynamic";
 
@@ -42,18 +33,17 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
     status,
   });
 
-  const taskSummary = await listTaskSummaries({
-    page: 1,
-    pageSize: 100,
-    projectId: undefined,
-  });
-
   return (
     <div className="page">
       <PageHeader
         eyebrow="Projects"
         title="Project portfolio"
         description="Review ownership, progress, and the health of every active project in one place."
+        actions={
+          <Link className="button button-primary button-link" href="/projects/new">
+            New project
+          </Link>
+        }
       />
 
       <form className="filters" method="get">
@@ -82,50 +72,45 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
       </form>
 
       <section className="resource-grid" aria-label="Project results">
-        {data.items.map((project) => {
-          const projectTaskCount = taskSummary.items.filter((task) => task.projectId === project.id).length;
-
-          return (
-            <article className="resource-card" key={project.id}>
-              <div className="resource-top">
-                <div className="resource-body">
-                  <div className="resource-top">
-                    <Link className="resource-title" href={`/projects/${project.id}`}>
-                      {project.name}
-                    </Link>
-                    <StatusPill tone={getToneForStatus(project.status)}>
-                      {getStatusLabel(project.status)}
-                    </StatusPill>
-                  </div>
-                  <p className="resource-description">{project.description ?? "No project description provided."}</p>
+        {data.items.map((project) => (
+          <article className="resource-card" key={project.id}>
+            <div className="resource-top">
+              <div className="resource-body">
+                <div className="resource-top">
+                  <Link className="resource-title" href={`/projects/${project.id}`}>
+                    {project.name}
+                  </Link>
+                  <StatusPill tone={getToneForStatus(project.status)}>
+                    {getStatusLabel(project.status)}
+                  </StatusPill>
                 </div>
+                <p className="resource-description">{project.description ?? "No project description provided."}</p>
               </div>
+            </div>
 
-              <div className="compact-list">
-                <div className="list-meta">
-                  <span className="list-secondary">Owner</span>
-                  <span className="list-title">{project.owner.name}</span>
-                </div>
-                <div className="list-meta">
-                  <span className="list-secondary">Tasks</span>
-                  <span className="list-title">{projectTaskCount}</span>
-                </div>
-                <div className="list-meta">
-                  <span className="list-secondary">Updated</span>
-                  <span className="list-title">{formatDate(project.updatedAt)}</span>
-                </div>
+            <div className="compact-list">
+              <div className="list-meta">
+                <span className="list-secondary">Owner</span>
+                <span className="list-title">{project.owner.name}</span>
               </div>
-            </article>
-          );
-        })}
+              <div className="list-meta">
+                <span className="list-secondary">Tasks</span>
+                <span className="list-title">{project._count.tasks}</span>
+              </div>
+              <div className="list-meta">
+                <span className="list-secondary">Updated</span>
+                <span className="list-title">{formatDate(project.updatedAt)}</span>
+              </div>
+            </div>
+          </article>
+        ))}
       </section>
 
       {data.items.length === 0 ? (
         <div className="empty-state">
           <h2 className="empty-title">No projects found</h2>
           <p className="empty-copy">
-            Try a broader search or clear the status filter to see more of the
-            workspace.
+            Try a broader search or clear the status filter to see more of the workspace.
           </p>
         </div>
       ) : null}

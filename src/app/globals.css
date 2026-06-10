@@ -531,6 +531,7 @@ img {
 
 .input,
 .select,
+.textarea,
 .button {
   border-radius: 14px;
   border: 1px solid rgba(148, 163, 184, 0.24);
@@ -540,13 +541,21 @@ img {
 }
 
 .input,
-.select {
+.select,
+.textarea {
   width: 100%;
   padding: 0 14px;
 }
 
+.textarea {
+  min-height: 140px;
+  padding: 12px 14px;
+  resize: vertical;
+}
+
 .input:focus,
 .select:focus,
+.textarea:focus,
 .button:focus-visible,
 .nav-link:focus-visible {
   outline: 2px solid rgba(15, 118, 110, 0.24);
@@ -579,6 +588,12 @@ img {
   background: rgba(255, 255, 255, 0.72);
 }
 
+.button-danger {
+  color: #ffffff;
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--danger), #ef4444);
+}
+
 .button-disabled {
   pointer-events: none;
   opacity: 0.5;
@@ -592,6 +607,31 @@ img {
   justify-content: center;
   padding: 0 14px;
   text-decoration: none;
+}
+
+.form-stack {
+  display: grid;
+  gap: 16px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.form-actions,
+.form-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.form-error {
+  margin: 0;
+  color: var(--danger);
+  line-height: 1.5;
 }
 
 .auth-trigger {
@@ -893,6 +933,10 @@ img {
 
   .field {
     min-width: 100%;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
   }
 
   .page-header,

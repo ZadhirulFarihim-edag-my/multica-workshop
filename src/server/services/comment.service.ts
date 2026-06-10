@@ -1,5 +1,6 @@
 import { createEntityId } from "../utils/ids";
 import { createPageInfo, getPaginationWindow } from "../utils/pagination";
+import { ensureDemoWorkspaceSeeded } from "../utils/demo-seed";
 import { createNotFoundError } from "./errors";
 import {
   countComments,
@@ -19,6 +20,8 @@ export async function listCommentSummaries(query: {
   authorId?: string;
   parentCommentId?: string;
 }) {
+  await ensureDemoWorkspaceSeeded();
+
   const where = {
     AND: [
       ...(query.taskId ? [{ taskId: query.taskId }] : []),
@@ -40,6 +43,8 @@ export async function listCommentSummaries(query: {
 }
 
 export async function getCommentDetail(id: string) {
+  await ensureDemoWorkspaceSeeded();
+
   const comment = await getCommentById(id);
 
   if (!comment) {
@@ -55,6 +60,8 @@ export async function createCommentRecord(input: {
   parentCommentId?: string;
   authorId?: string;
 }) {
+  await ensureDemoWorkspaceSeeded();
+
   const task = await getTaskById(input.taskId);
 
   if (!task) {
@@ -96,6 +103,8 @@ export async function updateCommentRecord(
     content?: string;
   }
 ) {
+  await ensureDemoWorkspaceSeeded();
+
   const existing = await getCommentById(id);
 
   if (!existing) {
@@ -106,6 +115,8 @@ export async function updateCommentRecord(
 }
 
 export async function deleteCommentRecord(id: string) {
+  await ensureDemoWorkspaceSeeded();
+
   const existing = await getCommentById(id);
 
   if (!existing) {

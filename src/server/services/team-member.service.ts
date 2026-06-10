@@ -1,5 +1,6 @@
 import { createEntityId } from "../utils/ids";
 import { createPageInfo, getPaginationWindow } from "../utils/pagination";
+import { ensureDemoWorkspaceSeeded } from "../utils/demo-seed";
 import { createConflictError, createNotFoundError } from "./errors";
 import {
   countTeamMembers,
@@ -32,6 +33,8 @@ export async function listTeamMemberSummaries(query: {
   status?: "active" | "inactive" | "invited";
   role?: "owner" | "admin" | "member" | "viewer";
 }) {
+  await ensureDemoWorkspaceSeeded();
+
   const where = {
     AND: [
       ...(query.search
@@ -64,6 +67,8 @@ export async function listTeamMemberSummaries(query: {
 }
 
 export async function getTeamMemberDetail(id: string) {
+  await ensureDemoWorkspaceSeeded();
+
   const member = await getTeamMemberById(id);
 
   if (!member) {
@@ -82,6 +87,8 @@ export async function createTeamMemberRecord(input: {
   avatarUrl?: string;
   notes?: string;
 }) {
+  await ensureDemoWorkspaceSeeded();
+
   const existingEmail = await getTeamMemberByEmail(input.email);
 
   if (existingEmail) {
@@ -112,6 +119,8 @@ export async function updateTeamMemberRecord(
     notes?: string;
   },
 ) {
+  await ensureDemoWorkspaceSeeded();
+
   const existing = await getTeamMemberById(id);
 
   if (!existing) {
@@ -131,6 +140,8 @@ export async function updateTeamMemberRecord(
 }
 
 export async function deleteTeamMemberRecord(id: string) {
+  await ensureDemoWorkspaceSeeded();
+
   const existing = await getTeamMemberById(id);
 
   if (!existing) {

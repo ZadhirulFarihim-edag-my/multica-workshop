@@ -34,12 +34,12 @@ export const taskCreateSchema = z.object({
 export const taskUpdateSchema = updateObjectSchema(
   {
     title: taskFields.title,
-    description: taskFields.description,
+    description: taskFields.description.nullable(),
     status: taskFields.status,
     priority: taskFields.priority,
     projectId: taskFields.projectId,
-    assigneeId: taskFields.assigneeId,
-    dueDate: taskFields.dueDate,
+    assigneeId: taskFields.assigneeId.nullable(),
+    dueDate: taskFields.dueDate.nullable(),
   },
   "At least one task field must be provided"
 );

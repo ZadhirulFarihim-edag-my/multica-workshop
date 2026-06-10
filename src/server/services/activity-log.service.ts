@@ -1,4 +1,5 @@
 import { createPageInfo } from "../utils/pagination";
+import { ensureDemoWorkspaceSeeded } from "../utils/demo-seed";
 import { countActivityLogs, listActivityLogs } from "../repositories/activity-log.repository";
 
 export async function listActivityLogSummaries(query: {
@@ -9,6 +10,8 @@ export async function listActivityLogSummaries(query: {
   actorId?: string;
   action?: string;
 }) {
+  await ensureDemoWorkspaceSeeded();
+
   const where = {
     AND: [
       ...(query.projectId ? [{ projectId: query.projectId }] : []),

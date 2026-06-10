@@ -1,18 +1,9 @@
 import Link from "next/link";
 import { PageHeader } from "../../components/ui/page-header";
 import { StatusPill } from "../../components/ui/status-pill";
-import {
-  formatDate,
-  getStatusLabel,
-  getToneForStatus,
-} from "../../lib/workspace";
-import {
-  getQueryValue,
-  mergeSearchParams,
-  parsePage,
-  parseString,
-} from "../../lib/query-params";
-import { listTaskSummaries } from "../../lib/demo-workspace";
+import { getQueryValue, mergeSearchParams, parsePage, parseString } from "../../lib/query-params";
+import { formatDate, getStatusLabel, getToneForStatus } from "../../lib/workspace";
+import { listTaskSummaries } from "../../server/services/task.service";
 
 export const dynamic = "force-dynamic";
 
@@ -57,6 +48,11 @@ export default async function TasksPage({ searchParams }: PageProps) {
         eyebrow="Tasks"
         title="Task board"
         description="Review task status, priority, assignee, and due date without leaving the command center."
+        actions={
+          <Link className="button button-primary button-link" href="/tasks/new">
+            New task
+          </Link>
+        }
       />
 
       <form className="filters" method="get">
@@ -129,9 +125,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
             </div>
 
             <div className="table-cell">
-              <span className="table-value">
-                {task.assignee ? task.assignee.name : "Unassigned"}
-              </span>
+              <span className="table-value">{task.assignee ? task.assignee.name : "Unassigned"}</span>
               <span className="table-value">
                 {task.dueDate ? `Due ${formatDate(task.dueDate)}` : "No due date"}
               </span>
@@ -141,7 +135,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
               <StatusPill tone={getToneForStatus(task.status)}>
                 {getStatusLabel(task.status)}
               </StatusPill>
-              <StatusPill tone={getToneForStatus(task.priority)} subtle>
+              <StatusPill subtle tone={getToneForStatus(task.priority)}>
                 {getStatusLabel(task.priority)}
               </StatusPill>
               <span className="table-value">{task._count.comments} comments</span>
@@ -153,9 +147,7 @@ export default async function TasksPage({ searchParams }: PageProps) {
       {data.items.length === 0 ? (
         <div className="empty-state">
           <h2 className="empty-title">No tasks found</h2>
-          <p className="empty-copy">
-            Try a broader search or clear one of the task filters.
-          </p>
+          <p className="empty-copy">Try a broader search or clear one of the task filters.</p>
         </div>
       ) : null}
 

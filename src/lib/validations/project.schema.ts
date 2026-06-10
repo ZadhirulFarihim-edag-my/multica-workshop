@@ -31,10 +31,10 @@ export const projectCreateSchema = z.object({
 export const projectUpdateSchema = updateObjectSchema(
   {
     name: projectFields.name,
-    description: projectFields.description,
+    description: projectFields.description.nullable(),
     ownerId: projectFields.ownerId,
     status: projectFields.status,
-    color: projectFields.color,
+    color: projectFields.color.nullable(),
   },
   "At least one project field must be provided"
 );

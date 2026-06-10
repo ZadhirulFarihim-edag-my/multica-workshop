@@ -1,13 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { DeleteResourceButton } from "../../../components/ui/delete-resource-button";
 import { PageHeader } from "../../../components/ui/page-header";
 import { StatusPill } from "../../../components/ui/status-pill";
 import { formatDate, formatDateTime, getStatusLabel, getToneForStatus } from "../../../lib/workspace";
-import {
-  getProjectDetail,
-  listActivityLogSummaries,
-  listTaskSummaries,
-} from "../../../lib/demo-workspace";
+import { listActivityLogSummaries } from "../../../server/services/activity-log.service";
+import { getProjectDetail } from "../../../server/services/project.service";
+import { listTaskSummaries } from "../../../server/services/task.service";
 
 export const dynamic = "force-dynamic";
 
@@ -22,23 +21,29 @@ function isNotFoundError(error: unknown) {
 export default async function ProjectDetailPage({ params }: PageProps) {
   const { id } = await Promise.resolve(params);
 
-  const projectResult = await Promise.allSettled([
+  const result = await Promise.allSettled([
     getProjectDetail(id),
     listTaskSummaries({ page: 1, pageSize: 100, projectId: id }),
     listActivityLogSummaries({ page: 1, pageSize: 8, projectId: id }),
   ]);
 
-  if (projectResult[0].status === "rejected") {
-    if (isNotFoundError(projectResult[0].reason)) {
+  if (result[0].status === "rejected") {
+    if (isNotFoundError(result[0].reason)) {
       notFound();
     }
 
-    throw projectResult[0].reason;
+    throw result[0].reason;
   }
 
-  const project = projectResult[0].value;
-  const taskPage = projectResult[1].status === "fulfilled" ? projectResult[1].value : { items: [], pageInfo: { page: 1, pageSize: 100, totalItems: 0, totalPages: 0, hasNextPage: false, hasPreviousPage: false } };
-  const logsPage = projectResult[2].status === "fulfilled" ? projectResult[2].value : { items: [], pageInfo: { page: 1, pageSize: 8, totalItems: 0, totalPages: 0, hasNextPage: false, hasPreviousPage: false } };
+  const project = result[0].value;
+  const taskPage =
+    result[1].status === "fulfilled"
+      ? result[1].value
+      : { items: [], pageInfo: { page: 1, pageSize: 100, totalItems: 0, totalPages: 0, hasNextPage: false, hasPreviousPage: false } };
+  const logsPage =
+    result[2].status === "fulfilled"
+      ? result[2].value
+      : { items: [], pageInfo: { page: 1, pageSize: 8, totalItems: 0, totalPages: 0, hasNextPage: false, hasPreviousPage: false } };
 
   const completedTasks = taskPage.items.filter((task) => task.status === "done").length;
   const progress = taskPage.items.length > 0 ? Math.round((completedTasks / taskPage.items.length) * 100) : 0;
@@ -50,9 +55,23 @@ export default async function ProjectDetailPage({ params }: PageProps) {
         title={project.name}
         description={project.description ?? "This project does not yet have a description."}
         actions={
-          <Link className="button button-secondary button-link" href="/projects">
-            Back to projects
-          </Link>
+          <>
+            <Link className="button button-secondary button-link" href="/projects">
+              Back to projects
+            </Link>
+            <Link className="button button-primary button-link" href={`/tasks/new?projectId=${project.id}`}>
+              New task
+            </Link>
+            <Link className="button button-secondary button-link" href={`/projects/${project.id}/edit`}>
+              Edit project
+            </Link>
+            <DeleteResourceButton
+              confirmMessage={`Delete project "${project.name}" and its tasks?`}
+              endpoint={`/api/projects/${project.id}`}
+              label="Delete project"
+              redirectTo="/projects"
+            />
+          </>
         }
       />
 
@@ -64,8 +83,8 @@ export default async function ProjectDetailPage({ params }: PageProps) {
             </StatusPill>
             <h2 className="detail-title">{project.name}</h2>
             <p className="detail-subtitle">
-              Owned by <strong>{project.owner.name}</strong>. {project._count.tasks} tasks
-              belong to this project and the current task completion rate is {progress}%.
+              Owned by <strong>{project.owner.name}</strong>. {project._count.tasks} tasks belong to this project and the
+              current task completion rate is {progress}%.
             </p>
           </div>
           <div className="detail-meta">
@@ -85,9 +104,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
             <div className="section-card-header">
               <div>
                 <p className="section-title">Project tasks</p>
-                <p className="section-description">
-                  The tasks currently assigned to this project.
-                </p>
+                <p className="section-description">The tasks currently assigned to this project.</p>
               </div>
               <StatusPill tone="info">{taskPage.items.length} visible</StatusPill>
             </div>
@@ -99,17 +116,14 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                     <Link className="list-title" href={`/tasks/${task.id}`}>
                       {task.title}
                     </Link>
-                    <StatusPill tone={getToneForStatus(task.priority)}>
-                      {getStatusLabel(task.priority)}
-                    </StatusPill>
+                    <StatusPill tone={getToneForStatus(task.priority)}>{getStatusLabel(task.priority)}</StatusPill>
                   </div>
                   <p className="list-secondary">
-                    {task.assignee ? task.assignee.name : "Unassigned"} ·{" "}
-                    {task._count.comments} comments ·{" "}
+                    {task.assignee ? task.assignee.name : "Unassigned"} | {task._count.comments} comments |{" "}
                     {task.dueDate ? `Due ${formatDate(task.dueDate)}` : "No due date"}
                   </p>
                   <p className="list-secondary">
-                    {getStatusLabel(task.status)} · {task.project.name}
+                    {getStatusLabel(task.status)} | {task.project.name}
                   </p>
                 </li>
               ))}
@@ -120,9 +134,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
             <div className="section-card-header">
               <div>
                 <p className="section-title">Recent activity</p>
-                <p className="section-description">
-                  What changed most recently for this project.
-                </p>
+                <p className="section-description">What changed most recently for this project.</p>
               </div>
               <StatusPill tone="info">{logsPage.items.length} items</StatusPill>
             </div>
@@ -138,7 +150,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                   </div>
                   <p className="timeline-body">
                     {entry.task ? entry.task.title : "Project scoped event"}
-                    {entry.actor ? ` · ${entry.actor.name}` : ""}
+                    {entry.actor ? ` | ${entry.actor.name}` : ""}
                   </p>
                   <p className="timeline-body">{formatDateTime(entry.createdAt)}</p>
                 </li>
@@ -152,9 +164,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
             <div className="section-card-header">
               <div>
                 <p className="section-title">Project metadata</p>
-                <p className="section-description">
-                  Ownership and record details for this project.
-                </p>
+                <p className="section-description">Ownership and record details for this project.</p>
               </div>
             </div>
 
@@ -183,14 +193,18 @@ export default async function ProjectDetailPage({ params }: PageProps) {
             <div className="section-card-header">
               <div>
                 <p className="section-title">Workspace links</p>
-                <p className="section-description">
-                  Jump to related views without losing context.
-                </p>
+                <p className="section-description">Jump to related views without losing context.</p>
               </div>
             </div>
 
             <div className="compact-list">
-              <Link className="button button-primary button-link" href="/tasks">
+              <Link className="button button-primary button-link" href={`/tasks/new?projectId=${project.id}`}>
+                Create task for project
+              </Link>
+              <Link className="button button-secondary button-link" href={`/projects/${project.id}/edit`}>
+                Edit project
+              </Link>
+              <Link className="button button-secondary button-link" href="/tasks">
                 Open tasks
               </Link>
               <Link className="button button-secondary button-link" href="/team">

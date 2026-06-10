@@ -1,5 +1,6 @@
 import { createEntityId } from "../utils/ids";
 import { createPageInfo, getPaginationWindow } from "../utils/pagination";
+import { ensureDemoWorkspaceSeeded } from "../utils/demo-seed";
 import { createNotFoundError } from "./errors";
 import {
   countProjects,
@@ -18,6 +19,8 @@ export async function listProjectSummaries(query: {
   status?: "planning" | "active" | "archived";
   ownerId?: string;
 }) {
+  await ensureDemoWorkspaceSeeded();
+
   const where = {
     AND: [
       ...(query.search
@@ -48,6 +51,8 @@ export async function listProjectSummaries(query: {
 }
 
 export async function getProjectDetail(id: string) {
+  await ensureDemoWorkspaceSeeded();
+
   const project = await getProjectById(id);
 
   if (!project) {
@@ -64,6 +69,8 @@ export async function createProjectRecord(input: {
   status: "planning" | "active" | "archived";
   color?: string;
 }) {
+  await ensureDemoWorkspaceSeeded();
+
   const owner = await getTeamMemberById(input.ownerId);
 
   if (!owner) {
@@ -84,12 +91,14 @@ export async function updateProjectRecord(
   id: string,
   input: {
     name?: string;
-    description?: string;
+    description?: string | null;
     ownerId?: string;
     status?: "planning" | "active" | "archived";
-    color?: string;
+    color?: string | null;
   }
 ) {
+  await ensureDemoWorkspaceSeeded();
+
   const existing = await getProjectById(id);
 
   if (!existing) {
@@ -108,6 +117,8 @@ export async function updateProjectRecord(
 }
 
 export async function deleteProjectRecord(id: string) {
+  await ensureDemoWorkspaceSeeded();
+
   const existing = await getProjectById(id);
 
   if (!existing) {

@@ -1,5 +1,6 @@
 import { createEntityId } from "../utils/ids";
 import { createPageInfo, getPaginationWindow } from "../utils/pagination";
+import { ensureDemoWorkspaceSeeded } from "../utils/demo-seed";
 import { createNotFoundError } from "./errors";
 import {
   countTasks,
@@ -23,6 +24,8 @@ export async function listTaskSummaries(query: {
   dueBefore?: string;
   dueAfter?: string;
 }) {
+  await ensureDemoWorkspaceSeeded();
+
   const dueDate =
     query.dueBefore || query.dueAfter
       ? {
@@ -64,6 +67,8 @@ export async function listTaskSummaries(query: {
 }
 
 export async function getTaskDetail(id: string) {
+  await ensureDemoWorkspaceSeeded();
+
   const task = await getTaskById(id);
 
   if (!task) {
@@ -82,6 +87,8 @@ export async function createTaskRecord(input: {
   assigneeId?: string;
   dueDate?: string;
 }) {
+  await ensureDemoWorkspaceSeeded();
+
   const project = await getProjectById(input.projectId);
 
   if (!project) {
@@ -112,14 +119,16 @@ export async function updateTaskRecord(
   id: string,
   input: {
     title?: string;
-    description?: string;
+    description?: string | null;
     status?: "todo" | "in_progress" | "review" | "blocked" | "done";
     priority?: "low" | "medium" | "high" | "urgent";
     projectId?: string;
-    assigneeId?: string;
-    dueDate?: string;
+    assigneeId?: string | null;
+    dueDate?: string | null;
   }
 ) {
+  await ensureDemoWorkspaceSeeded();
+
   const existing = await getTaskById(id);
 
   if (!existing) {
@@ -144,11 +153,14 @@ export async function updateTaskRecord(
 
   return updateTask(id, {
     ...input,
-    dueDate: input.dueDate ? new Date(input.dueDate) : undefined,
+    dueDate:
+      input.dueDate === undefined ? undefined : input.dueDate ? new Date(input.dueDate) : null,
   });
 }
 
 export async function deleteTaskRecord(id: string) {
+  await ensureDemoWorkspaceSeeded();
+
   const existing = await getTaskById(id);
 
   if (!existing) {
